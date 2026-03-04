@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { AuthGuard, AuthModule } from '@thallesp/nestjs-better-auth';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -13,15 +13,19 @@ import { APP_GUARD } from '@nestjs/core/constants';
     ConfigModule.forRoot({}),
     DatabaseModule,
     AuthModule.forRootAsync({
-      imports: [DatabaseModule],
-      useFactory: (database: NodePgDatabase) => ({
+      imports: [DatabaseModule, ConfigModule],
+      useFactory: (database: NodePgDatabase, configService: ConfigService) => ({
         auth: betterAuth({
           database: drizzleAdapter(database, {
             provider: 'pg',
           }),
+          emailAndPassword: {
+            enabled: true,
+          },
+          trustedOrigins: [configService.getOrThrow<string>('UI_URL')],
         }),
       }),
-      inject: [DATABASE_CONNECTION],
+      inject: [DATABASE_CONNECTION, ConfigService],
     }),
   ],
   controllers: [],
