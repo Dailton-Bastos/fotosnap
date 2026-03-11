@@ -39,3 +39,4 @@ yarn-error.log*
 # PostgreSQL data directory
 pgdata
 pgadmin
+apps/backend/uploads/

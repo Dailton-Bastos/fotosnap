@@ -21,7 +21,7 @@ export class PostsService {
       .values({
         userId,
         caption: createPostInput.caption,
-        image: 'https://placehold.co/600x400',
+        image: createPostInput.image,
         likes: 0,
         createdAt: new Date(),
       })

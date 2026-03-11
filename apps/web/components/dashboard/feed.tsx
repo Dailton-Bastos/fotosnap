@@ -3,13 +3,13 @@
 import { Card } from '@/components/ui/card';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, User } from 'lucide-react';
 
 interface Post {
-  id: string;
+  id: number;
   user: {
     username: string;
-    avatar: string;
+    avatar: string | null;
   };
   image: string;
   caption: string;
@@ -18,62 +18,42 @@ interface Post {
   timestamp: string;
 }
 
-const mockPosts: Post[] = [
-  {
-    id: '1',
-    user: {
-      username: 'john_doe',
-      avatar: 'https://randomuser.me/api/portraits/men/6.jpg',
-    },
-    image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=600&fit=crop',
-    caption: 'Enjoying the sunny day!',
-    likes: 120,
-    comments: 15,
-    timestamp: '6 mins ago',
-  },
-  {
-    id: '2',
-    user: {
-      username: 'jane_smith',
-      avatar: 'https://randomuser.me/api/portraits/women/7.jpg',
-    },
-    image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=600&fit=crop',
-    caption: 'Had a great weekend with friends!',
-    likes: 200,
-    comments: 30,
-    timestamp: '1 hour ago',
-  },
-  {
-    id: '3',
-    user: {
-      username: 'alice_wonder',
-      avatar: 'https://randomuser.me/api/portraits/women/8.jpg',
-    },
-    image:
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=600&fit=crop',
-    caption: 'Loving this new recipe I tried!',
-    likes: 80,
-    comments: 10,
-    timestamp: '2 hours ago',
-  },
-];
+interface FeedProps {
+  posts: Post[];
+}
 
-export const Feed = () => {
+export const Feed = ({ posts }: FeedProps) => {
+  const getImageUrl = (imagePath: string) => {
+    return `${process.env.NEXT_PUBLIC_API_URL}/uploads/images/${imagePath}`;
+  };
+
+  const getAvatarUrl = (avatarPath: string | null) => {
+    if (!avatarPath) {
+      return '';
+    }
+    return `${process.env.NEXT_PUBLIC_API_URL}/uploads/images/${avatarPath}`;
+  };
+
   return (
     <div className="space-y-6">
-      {mockPosts.map((post) => (
+      {posts.map((post) => (
         <Card key={post.id} className="overflow-hidden">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-3">
-              <Image
-                src={post.user.avatar}
-                alt={post.user.username}
-                width={64}
-                height={64}
-                className="w-8 h-8 rounded-full"
-              />
+              {getAvatarUrl(post.user.avatar) ? (
+                <Image
+                  src={getAvatarUrl(post.user.avatar)}
+                  alt={post.user.username}
+                  width={64}
+                  height={64}
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+
               <span className="font-semibold text-sm">
                 {post.user.username}
               </span>
@@ -82,11 +62,10 @@ export const Feed = () => {
 
           <div className="aspect-square relative">
             <Image
-              src={post.image}
+              src={getImageUrl(post.image)}
               alt={post.caption}
-              className="object-cover w-full h-full"
-              width={600}
-              height={600}
+              className="object-cover"
+              fill
             />
           </div>
 
