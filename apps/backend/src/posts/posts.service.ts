@@ -45,7 +45,7 @@ export class PostsService {
       timestamp: post.createdAt.toISOString(),
       user: {
         username: post.user.name,
-        avatar: '',
+        avatar: post.user.image ?? '',
       },
     }));
   }

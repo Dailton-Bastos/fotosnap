@@ -10,13 +10,14 @@ import {
   FileSizeValidationPipe,
   FileTypeValidationPipe,
 } from './file-validation.pipe';
+import { multerConfig } from './upload.config';
 
 @Controller('upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post('image')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image', multerConfig))
   uploadImage(
     @UploadedFile(new FileSizeValidationPipe(), new FileTypeValidationPipe())
     file: Express.Multer.File,
