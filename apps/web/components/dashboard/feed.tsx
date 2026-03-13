@@ -5,25 +5,14 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Heart, MessageCircle, User } from 'lucide-react';
 import { getImageUrl } from '@/lib/image';
-
-interface Post {
-  id: number;
-  user: {
-    username: string;
-    avatar: string | null;
-  };
-  image: string;
-  caption: string;
-  likes: number;
-  comments: number;
-  timestamp: string;
-}
+import type { Post } from '@repo/trpc/schemas';
 
 interface FeedProps {
   posts: Post[];
+  onLikePost: (postId: number) => void;
 }
 
-export const Feed = ({ posts }: FeedProps) => {
+export const Feed = ({ posts, onLikePost }: FeedProps) => {
   return (
     <div className="space-y-6">
       {posts.map((post) => (
@@ -62,8 +51,15 @@ export const Feed = ({ posts }: FeedProps) => {
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="sm" className="p-0 h-auto">
-                  <Heart className="w-6 h-6 text-foreground" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-0 h-auto"
+                  onClick={() => onLikePost(post.id)}
+                >
+                  <Heart
+                    className={`w-6 h-6 ${post.isLiked ? 'text-red-500 fill-red-500' : 'text-foreground'}`}
+                  />
                 </Button>
 
                 <Button variant="ghost" size="sm" className="p-0 h-auto">
@@ -90,7 +86,7 @@ export const Feed = ({ posts }: FeedProps) => {
             )}
 
             <div className="text-xs text-muted-foreground uppercase">
-              {post.timestamp}
+              {new Date(post.timestamp).toLocaleDateString()}
             </div>
           </div>
         </Card>

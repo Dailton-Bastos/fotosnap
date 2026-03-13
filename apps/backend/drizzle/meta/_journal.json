@@ -15,6 +15,20 @@
       "when": 1773079154036,
       "tag": "0001_aspiring_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773402524558,
+      "tag": "0002_romantic_paladin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773404573557,
+      "tag": "0003_loose_junta",
+      "breakpoints": true
     }
   ]
 }

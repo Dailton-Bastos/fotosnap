@@ -20,6 +20,24 @@ function Home() {
     onSuccess: () => utils.postsRouter.findAll.invalidate(),
   });
 
+  const likePost = trpc.postsRouter.likePost.useMutation({
+    onMutate: async ({ postId }) => {
+      utils.postsRouter.findAll.setData(undefined, (old) => {
+        if (!old) return old;
+
+        return old.map((post) => {
+          if (post.id === postId) {
+            const isLiked = post.isLiked ?? false;
+            const likes = isLiked ? post.likes - 1 : post.likes + 1;
+
+            return { ...post, likes, isLiked: !isLiked };
+          }
+          return post;
+        });
+      });
+    },
+  });
+
   const handleCreatePost = async (file: File, caption: string) => {
     const formData = new FormData();
     formData.append('image', file);
@@ -47,7 +65,10 @@ function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <Stories />
-            <Feed posts={posts.data ?? []} />
+            <Feed
+              posts={posts.data ?? []}
+              onLikePost={(postId) => likePost.mutate({ postId })}
+            />
           </div>
           <div className="lg:sticky lg:top-8 lg:h-fit">
             <Sidebar />

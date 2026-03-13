@@ -1,46 +1,39 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreatePostInput, Post } from './schemas/trpc.schema';
+import { CreatePostInput } from '@repo/trpc/schemas';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { schema } from '../database/database.module';
-import { post } from './schemas/schema';
-import { UsersService } from '../auth/users/users.service';
-import { desc } from 'drizzle-orm';
+import { like, post } from './schemas/schema';
+import { and, desc, eq } from 'drizzle-orm';
 
 @Injectable()
 export class PostsService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly database: NodePgDatabase<typeof schema>,
-    private readonly userService: UsersService,
   ) {}
 
   async create(createPostInput: CreatePostInput, userId: string) {
-    const [newPost] = await this.database
-      .insert(post)
-      .values({
-        userId,
-        caption: createPostInput.caption,
-        image: createPostInput.image,
-        likes: 0,
-        createdAt: new Date(),
-      })
-      .returning();
-
-    return this.formatPostResponse(newPost, userId);
+    await this.database.insert(post).values({
+      userId,
+      caption: createPostInput.caption,
+      image: createPostInput.image,
+      createdAt: new Date(),
+    });
   }
 
-  async findAll() {
+  async findAll(userId: string) {
     const posts = await this.database.query.post.findMany({
       orderBy: [desc(post.createdAt)],
-      with: { user: true },
+      with: { user: true, likes: true },
     });
 
     return posts.map((post) => ({
       id: post.id,
       caption: post.caption,
       image: post.image,
-      likes: post.likes,
+      likes: post.likes.length,
+      isLiked: post.likes.some((like) => like.userId === userId),
       comments: 0,
       timestamp: post.createdAt.toISOString(),
       user: {
@@ -50,23 +43,18 @@ export class PostsService {
     }));
   }
 
-  private async formatPostResponse(
-    savedPost: typeof post.$inferSelect,
-    userId: string,
-  ): Promise<Post> {
-    const user = await this.userService.findById(userId);
+  async likePost(postId: number, userId: string) {
+    const existingLike = await this.database.query.like.findFirst({
+      where: and(eq(like.postId, postId), eq(like.userId, userId)),
+    });
 
-    return {
-      id: savedPost.id,
-      caption: savedPost.caption,
-      image: savedPost.image,
-      likes: savedPost.likes,
-      comments: 0,
-      timestamp: savedPost.createdAt.toISOString(),
-      user: {
-        username: user.name,
-        avatar: '',
-      },
-    };
+    if (existingLike) {
+      return this.database.delete(like).where(eq(like.id, existingLike.id));
+    }
+
+    await this.database.insert(like).values({
+      postId,
+      userId,
+    });
   }
 }
