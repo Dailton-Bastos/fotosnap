@@ -40,3 +40,4 @@ yarn-error.log*
 pgdata
 pgadmin
 apps/backend/uploads/
+tsconfig.tsbuildinfo

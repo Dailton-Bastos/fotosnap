@@ -59,6 +59,32 @@ function Home() {
     });
   };
 
+  const createComment = trpc.commentsRouter.create.useMutation({
+    onSuccess: (_, variables) => {
+      utils.commentsRouter.findByPostId.invalidate({
+        postId: variables.postId,
+      });
+
+      utils.postsRouter.findAll.setData(undefined, (old) => {
+        if (!old) return old;
+
+        return old.map((post) => {
+          if (post.id === variables.postId) {
+            return { ...post, comments: post.comments + 1 };
+          }
+          return post;
+        });
+      });
+    },
+  });
+
+  const delteComment = trpc.commentsRouter.delete.useMutation({
+    onSuccess: () => {
+      utils.commentsRouter.findByPostId.invalidate();
+      utils.postsRouter.findAll.invalidate();
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -68,6 +94,12 @@ function Home() {
             <Feed
               posts={posts.data ?? []}
               onLikePost={(postId) => likePost.mutate({ postId })}
+              onAddComment={(postId, text) =>
+                createComment.mutate({ postId, text })
+              }
+              onDeleteComment={(commentId) =>
+                delteComment.mutate({ commentId })
+              }
             />
           </div>
           <div className="lg:sticky lg:top-8 lg:h-fit">

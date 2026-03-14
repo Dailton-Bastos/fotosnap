@@ -26,6 +26,26 @@ const appRouter = t.router({
     likePost: publicProcedure.input(z.object({
       postId: z.number(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  commentsRouter: t.router({
+    create: publicProcedure.input(z.object({
+      text: z.string().min(1, 'Comment cannot be empty'),
+      postId: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    findByPostId: publicProcedure.input(z.object({
+      postId: z.number(),
+    })).output(z.array(z.object({
+      id: z.number(),
+      text: z.string(),
+      user: z.object({
+        username: z.string(),
+        avatar: z.string(),
+      }),
+      createdAt: z.string(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    delete: publicProcedure.input(z.object({
+      commentId: z.number(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   })
 });
 export type AppRouter = typeof appRouter;
