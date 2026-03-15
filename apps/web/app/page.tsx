@@ -15,6 +15,7 @@ function Home() {
   const utils = trpc.useUtils();
 
   const posts = trpc.postsRouter.findAll.useQuery();
+  const stories = trpc.storiesRouter.getStories.useQuery();
 
   const createPost = trpc.postsRouter.create.useMutation({
     onSuccess: () => utils.postsRouter.findAll.invalidate(),
@@ -78,19 +79,46 @@ function Home() {
     },
   });
 
-  const delteComment = trpc.commentsRouter.delete.useMutation({
+  const deleteComment = trpc.commentsRouter.delete.useMutation({
     onSuccess: () => {
       utils.commentsRouter.findByPostId.invalidate();
       utils.postsRouter.findAll.invalidate();
     },
   });
 
+  const createStory = trpc.storiesRouter.create.useMutation({
+    onSuccess: () => utils.storiesRouter.getStories.invalidate(),
+  });
+
+  const handleStoruyUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const uploadResponse = await fetch('/api/upload/image', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    const { filename } = await uploadResponse.json();
+
+    await createStory.mutateAsync({
+      image: filename,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <Stories />
+            <Stories
+              storyGroups={stories.data ?? []}
+              onStoryUpload={handleStoruyUpload}
+            />
             <Feed
               posts={posts.data ?? []}
               onLikePost={(postId) => likePost.mutate({ postId })}
@@ -98,7 +126,7 @@ function Home() {
                 createComment.mutate({ postId, text })
               }
               onDeleteComment={(commentId) =>
-                delteComment.mutate({ commentId })
+                deleteComment.mutate({ commentId })
               }
             />
           </div>
