@@ -85,7 +85,7 @@ export const Stories = ({ storyGroups, onStoryUpload }: StoriesProps) => {
               <div className="p-0.5 rounded-full bg-linear-to-tr from-yellow-400 to-fuchsia-600 bg-gray-200">
                 {storyGroup.avatar ? (
                   <Image
-                    src={storyGroup.avatar}
+                    src={getImageUrl(storyGroup.avatar)}
                     alt={storyGroup.username}
                     width={64}
                     height={64}
