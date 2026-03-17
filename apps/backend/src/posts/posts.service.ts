@@ -22,8 +22,9 @@ export class PostsService {
     });
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, postUserId?: string) {
     const posts = await this.database.query.post.findMany({
+      where: postUserId ? eq(post.userId, postUserId) : undefined,
       orderBy: [desc(post.createdAt)],
       with: { user: true, likes: true, comments: true },
     });

@@ -10,7 +10,9 @@ const appRouter = t.router({
       caption: z.string().min(1, 'Caption is required'),
       image: z.string().min(1, 'Image is required'),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
-    findAll: publicProcedure.output(z.array(z.object({
+    findAll: publicProcedure.input(z.object({
+      userId: z.string().optional(),
+    })).output(z.array(z.object({
       id: z.number(),
       user: z.object({
         username: z.string(),
@@ -26,6 +28,48 @@ const appRouter = t.router({
     likePost: publicProcedure.input(z.object({
       postId: z.number(),
     })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
+  }),
+  usersRouter: t.router({
+    follow: publicProcedure.input(z.object({
+      userId: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    unfollow: publicProcedure.input(z.object({
+      userId: z.string(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getFollowers: publicProcedure.input(z.object({
+      userId: z.string(),
+    })).output(z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getFollowing: publicProcedure.input(z.object({
+      userId: z.string(),
+    })).output(z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getSuggestedUsers: publicProcedure.output(z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+    }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    updateProfile: publicProcedure.input(z.object({
+      name: z.string().optional(),
+      bio: z.string().optional(),
+      website: z.string().optional(),
+    })).mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    getUserProfile: publicProcedure.input(z.object({
+      userId: z.string(),
+    })).output(z.object({
+      id: z.string(),
+      name: z.string(),
+      bio: z.string().nullable(),
+      website: z.string().nullable(),
+      image: z.string().nullable(),
+      followersCount: z.number(),
+      followingCount: z.number(),
+      postCount: z.number(),
+      isFollowing: z.boolean(),
+    })).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any)
   }),
   commentsRouter: t.router({
     create: publicProcedure.input(z.object({

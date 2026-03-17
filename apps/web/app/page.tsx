@@ -14,7 +14,7 @@ function Home() {
 
   const utils = trpc.useUtils();
 
-  const posts = trpc.postsRouter.findAll.useQuery();
+  const posts = trpc.postsRouter.findAll.useQuery({});
   const stories = trpc.storiesRouter.getStories.useQuery();
 
   const createPost = trpc.postsRouter.create.useMutation({
@@ -23,7 +23,7 @@ function Home() {
 
   const likePost = trpc.postsRouter.likePost.useMutation({
     onMutate: async ({ postId }) => {
-      utils.postsRouter.findAll.setData(undefined, (old) => {
+      utils.postsRouter.findAll.setData({}, (old) => {
         if (!old) return old;
 
         return old.map((post) => {
@@ -66,7 +66,7 @@ function Home() {
         postId: variables.postId,
       });
 
-      utils.postsRouter.findAll.setData(undefined, (old) => {
+      utils.postsRouter.findAll.setData({}, (old) => {
         if (!old) return old;
 
         return old.map((post) => {

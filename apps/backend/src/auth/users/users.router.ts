@@ -59,6 +59,6 @@ export class UsersRouter {
 
   @Query({ input: userIdSchema, output: userProfileSchema })
   async getUserProfile(@Input() input: UserIdInput, @Ctx() ctx: AppContext) {
-    return this.usersService.getUserProfile(ctx.user.id, input.userId);
+    return this.usersService.getUserProfile(input.userId, ctx.user.id);
   }
 }
