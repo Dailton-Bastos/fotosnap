@@ -39,6 +39,22 @@ function Home() {
     },
   });
 
+  const savePost = trpc.postsRouter.savePost.useMutation({
+    onMutate: async ({ postId }) => {
+      utils.postsRouter.findAll.setData({}, (old) => {
+        if (!old) return old;
+
+        return old.map((post) => {
+          if (post.id === postId) {
+            const isSaved = post.isSaved ?? false;
+            return { ...post, isSaved: !isSaved };
+          }
+          return post;
+        });
+      });
+    },
+  });
+
   const handleCreatePost = async (file: File, caption: string) => {
     const formData = new FormData();
     formData.append('image', file);
@@ -128,6 +144,7 @@ function Home() {
               onDeleteComment={(commentId) =>
                 deleteComment.mutate({ commentId })
               }
+              onSavePost={(postId) => savePost.mutate({ postId })}
             />
           </div>
           <div className="lg:sticky lg:top-8 lg:h-fit">

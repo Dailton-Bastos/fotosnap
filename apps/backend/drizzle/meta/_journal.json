@@ -57,6 +57,13 @@
       "when": 1773667536106,
       "tag": "0007_third_quentin_quire",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1774126751540,
+      "tag": "0008_silky_masked_marvel",
+      "breakpoints": true
     }
   ]
 }

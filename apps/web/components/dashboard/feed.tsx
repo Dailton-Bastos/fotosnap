@@ -3,7 +3,7 @@
 import { Card } from '@/components/ui/card';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, User } from 'lucide-react';
+import { Bookmark, Heart, MessageCircle, User } from 'lucide-react';
 import { getImageUrl } from '@/lib/image';
 import type { Post } from '@repo/trpc/schemas';
 import { useState } from 'react';
@@ -15,6 +15,7 @@ interface FeedProps {
   onLikePost: (postId: number) => void;
   onAddComment: (postId: number, text: string) => void;
   onDeleteComment: (commentId: number) => void;
+  onSavePost: (postId: number) => void;
 }
 
 export const Feed = ({
@@ -22,6 +23,7 @@ export const Feed = ({
   onLikePost,
   onAddComment,
   onDeleteComment,
+  onSavePost,
 }: FeedProps) => {
   const [expandedComments, setExpandedComments] = useState<Set<number>>(
     new Set()
@@ -107,6 +109,17 @@ export const Feed = ({
                   />
                 </Button>
               </div>
+
+              <Button
+                variant={'ghost'}
+                size={'sm'}
+                className="p-0 h-auto"
+                onClick={() => onSavePost(post.id)}
+              >
+                <Bookmark
+                  className={`w-6 h-6 ${post.isSaved ? 'text-primary fill-primary' : 'text-foreground'}`}
+                />
+              </Button>
             </div>
 
             <div className="text-sm font-semibold">{post.likes} likes</div>

@@ -3,7 +3,7 @@ import { CreatePostInput, Post } from '@repo/trpc/schemas';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { schema } from '../database/database.module';
-import { like, post } from './schemas/schema';
+import { like, post, savedPost } from './schemas/schema';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { follow } from 'src/auth/schema';
 
@@ -32,12 +32,15 @@ export class PostsService {
       with: { user: true, likes: true, comments: true },
     });
 
+    const savedPosts = await this.getSavedPosts(userId);
+
     return posts.map((post) => ({
       id: post.id,
       caption: post.caption,
       image: post.image,
       likes: post.likes.length,
       isLiked: post.likes.some((like) => like.userId === userId),
+      isSaved: savedPosts.map((savedPost) => savedPost.id).includes(post.id),
       comments: post.comments.length,
       timestamp: post.createdAt.toISOString(),
       user: {
@@ -61,6 +64,47 @@ export class PostsService {
       postId,
       userId,
     });
+  }
+
+  async savePost(postId: number, userId: string) {
+    const existingSavedPost = await this.database.query.savedPost.findFirst({
+      where: and(eq(savedPost.postId, postId), eq(savedPost.userId, userId)),
+    });
+
+    if (existingSavedPost) {
+      return this.database
+        .delete(savedPost)
+        .where(eq(savedPost.id, existingSavedPost.id));
+    }
+
+    await this.database.insert(savedPost).values({
+      postId,
+      userId,
+    });
+  }
+
+  async getSavedPosts(userId: string): Promise<Post[]> {
+    const savedPosts = await this.database.query.savedPost.findMany({
+      where: eq(savedPost.userId, userId),
+      orderBy: [desc(savedPost.createdAt)],
+      with: { post: { with: { user: true, likes: true, comments: true } } },
+    });
+
+    return savedPosts.map((savedPost) => ({
+      id: savedPost.post.id,
+      caption: savedPost.post.caption,
+      image: savedPost.post.image,
+      likes: savedPost.post.likes.length,
+      isLiked: savedPost.post.likes.some((like) => like.userId === userId),
+      comments: savedPost.post.comments.length,
+      timestamp: savedPost.post.createdAt.toISOString(),
+      isSaved: true,
+      user: {
+        id: savedPost.post.user.id,
+        username: savedPost.post.user.name,
+        avatar: savedPost.post.user.image ?? '',
+      },
+    }));
   }
 
   private async getFollowedUserIds(userId: string): Promise<string[]> {

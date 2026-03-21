@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from '../ui/dialog';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/image';
 import { Button } from '../ui/button';
-import { Heart, Trash, User } from 'lucide-react';
+import { Bookmark, Heart, Trash, User } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { authClient } from '@/lib/auth/client';
 import { useState } from 'react';
@@ -69,6 +69,17 @@ export const PostModal = ({
       setCommentText('');
     },
   });
+
+  const savePostMutation = trpc.postsRouter.savePost.useMutation({
+    onSuccess: () => {
+      utils.postsRouter.findAll.invalidate();
+      utils.postsRouter.getSavedPosts.invalidate();
+    },
+  });
+
+  const handleSavePost = async () => {
+    await savePostMutation.mutateAsync({ postId: post.id });
+  };
 
   const handleAddComment = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -242,10 +253,22 @@ export const PostModal = ({
                       className={`h-6 w-6 ${post.isLiked ? 'fill-red-500 text-red-50' : ''}`}
                     />
                   </Button>
+
+                  <div className="font-semibold text-sm">
+                    {post.likes} {post.likes === 1 ? 'like' : 'likes'}
+                  </div>
                 </div>
-                <div className="font-semibold text-sm mb-3">
-                  {post.likes} {post.likes === 1 ? 'like' : 'likes'}
-                </div>
+                <Button
+                  variant={'ghost'}
+                  size={'icon'}
+                  onClick={handleSavePost}
+                  disabled={savePostMutation.isPending}
+                  className="p-0 h-auto"
+                >
+                  <Bookmark
+                    className={`h-6 w-6 ${post.isSaved ? 'fill-foreground' : ''}`}
+                  />
+                </Button>
               </div>
 
               <div className="border-t p-4">
