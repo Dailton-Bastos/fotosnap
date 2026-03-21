@@ -12,34 +12,6 @@ import { useState } from 'react';
 import { AvatarUpload } from './avatar-upload';
 import { trpc } from '@/lib/trpc/client';
 
-interface SuggestedUser {
-  id: string;
-  username: string;
-  avatar: string;
-  followedBy: string;
-}
-
-const suggestedUsers: SuggestedUser[] = [
-  {
-    id: '1',
-    username: 'john_doe',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-    followedBy: 'alice_smith',
-  },
-  {
-    id: '2',
-    username: 'jane_doe',
-    avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
-    followedBy: 'bob_jones',
-  },
-  {
-    id: '3',
-    username: 'michael_smith',
-    avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-    followedBy: 'charlie_brown',
-  },
-];
-
 export const Sidebar = () => {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const { data: session } = authClient.useSession();
@@ -47,6 +19,15 @@ export const Sidebar = () => {
   const utils = trpc.useUtils();
 
   const router = useRouter();
+
+  const { data: suggestedUsers = [] } =
+    trpc.usersRouter.getSuggestedUsers.useQuery();
+
+  const followMutation = trpc.usersRouter.follow.useMutation({
+    onSuccess: () => {
+      utils.usersRouter.getSuggestedUsers.refetch();
+    },
+  });
 
   const handleLogOut = async () => {
     await authClient.signOut();
@@ -147,27 +128,48 @@ export const Sidebar = () => {
         </div>
 
         <div className="space-y-3">
+          {suggestedUsers.length === 0 && (
+            <div className="text-sm text-muted-foreground">
+              No suggestions available at the moment.
+            </div>
+          )}
+
           {suggestedUsers.map((user) => (
-            <div key={user.id} className="flex items-center space-x-3">
-              <Image
-                src={user.avatar}
-                alt={`${user.username}'s profile picture`}
-                width={40}
-                height={40}
-                className="w-8 h-8 rounded-full"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm">{user.username}</div>
-                {user.followedBy && (
-                  <div className="text-xs text-muted-foreground">
-                    Followed by {user.followedBy}
+            <div key={user.id} className="flex items-center justify-center">
+              <Button
+                variant={'ghost'}
+                onClick={() => router.push(`/users/${user.id}`)}
+                className="flex items-center justify-start space-x-3 flex-1 min-w-0 h-auto hover:bg-transparent hover:opacity-80 transition-opacity p-0 text-left"
+              >
+                {user?.image ? (
+                  <Image
+                    src={getImageUrl(user.image)}
+                    alt={`${user.name}'s profile picture`}
+                    width={40}
+                    height={40}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                    <User className="w-4 h-4 text-muted-foreground" />
                   </div>
                 )}
-              </div>
+                <div className="min-w-0 text-left">
+                  <div className="font-semibold text-sm">{user.name}</div>
+                  {user.bio && (
+                    <div className="text-xs text-muted-foreground truncate">
+                      {user.bio}
+                    </div>
+                  )}
+                </div>
+              </Button>
+
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-primary hover:text-primary/90 text-xs"
+                onClick={() => followMutation.mutate({ userId: user.id })}
+                disabled={followMutation.isPending}
               >
                 Follow
               </Button>
