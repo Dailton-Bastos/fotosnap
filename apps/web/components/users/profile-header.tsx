@@ -16,6 +16,7 @@ interface ProfileHeaderProps {
   onEditProfile: () => void;
   onOpenFollowers: () => void;
   onOpenFollowing: () => void;
+  isOwnProfile: boolean;
   isFollowingLoading: boolean;
 }
 
@@ -25,6 +26,7 @@ export const ProfileHeader = ({
   onEditProfile,
   onOpenFollowers,
   onOpenFollowing,
+  isOwnProfile,
   isFollowingLoading,
 }: ProfileHeaderProps) => {
   return (
@@ -50,13 +52,15 @@ export const ProfileHeader = ({
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <h1 className="text-2xl font-normal">{profile.name}</h1>
             <div className="flex gap-2">
-              <Button
-                variant={profile.isFollowing ? 'outline' : 'default'}
-                onClick={onFollowToggle}
-                disabled={isFollowingLoading}
-              >
-                {profile.isFollowing ? 'Following' : 'Follow'}
-              </Button>
+              {!isOwnProfile && (
+                <Button
+                  variant={profile.isFollowing ? 'outline' : 'default'}
+                  onClick={onFollowToggle}
+                  disabled={isFollowingLoading}
+                >
+                  {profile.isFollowing ? 'Following' : 'Follow'}
+                </Button>
+              )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

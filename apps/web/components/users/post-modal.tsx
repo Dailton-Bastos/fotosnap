@@ -10,6 +10,7 @@ import { trpc } from '@/lib/trpc/client';
 import { authClient } from '@/lib/auth/client';
 import { useState } from 'react';
 import { Input } from '../ui/input';
+import { useRouter } from 'next/navigation';
 
 interface PostModalProps {
   post: Post;
@@ -23,6 +24,8 @@ export const PostModal = ({
   onOpenChange,
 }: PostModalProps) => {
   const [commentText, setCommentText] = useState('');
+
+  const router = useRouter();
 
   const { data: allPosts } = trpc.postsRouter.findAll.useQuery({});
 
@@ -102,6 +105,7 @@ export const PostModal = ({
               <Button
                 variant={'ghost'}
                 className="flex items-center space-x-3 h-auto p-0"
+                onClick={() => router.push(`/users/${post.user.id}`)}
               >
                 {post.user?.avatar ? (
                   <Image
@@ -125,6 +129,7 @@ export const PostModal = ({
                 <Button
                   variant={'ghost'}
                   className="shrink-0 p-0 h-auto hover:opacity-80 hover:bg-transparent"
+                  onClick={() => router.push(`/users/${post.user.id}`)}
                 >
                   {post.user?.avatar ? (
                     <Image
@@ -146,6 +151,7 @@ export const PostModal = ({
                       <Button
                         variant={'ghost'}
                         className="font-semibold mr-2 p-0 h-auto hover:opacity-80 hover:bg-transparent"
+                        onClick={() => router.push(`/users/${post.user.id}`)}
                       >
                         {post.user.username}
                       </Button>
@@ -164,6 +170,7 @@ export const PostModal = ({
                     <Button
                       variant={'ghost'}
                       className="shrink-0 p-0 h-auto hover:opacity-80 hover:bg-transparent"
+                      onClick={() => router.push(`/users/${comment.user.id}`)}
                     >
                       {comment.user?.avatar ? (
                         <Image
@@ -185,6 +192,9 @@ export const PostModal = ({
                           <Button
                             variant={'ghost'}
                             className="font-semibold text-sm p-0 h-auto hover:opacity-80 hover:bg-transparent"
+                            onClick={() =>
+                              router.push(`/users/${comment.user.id}`)
+                            }
                           >
                             {comment.user.username}
                           </Button>

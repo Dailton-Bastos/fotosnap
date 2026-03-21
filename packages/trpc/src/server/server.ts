@@ -15,8 +15,9 @@ const appRouter = t.router({
     })).output(z.array(z.object({
       id: z.number(),
       user: z.object({
+        id: z.string(),
         username: z.string(),
-        avatar: z.string().nullable(),
+        avatar: z.string(),
       }),
       image: z.string(),
       caption: z.string(),
@@ -41,16 +42,37 @@ const appRouter = t.router({
     })).output(z.array(z.object({
       id: z.string(),
       name: z.string(),
+      bio: z.string().nullable(),
+      website: z.string().nullable(),
+      image: z.string().nullable(),
+      followersCount: z.number(),
+      followingCount: z.number(),
+      postCount: z.number(),
+      isFollowing: z.boolean(),
     }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     getFollowing: publicProcedure.input(z.object({
       userId: z.string(),
     })).output(z.array(z.object({
       id: z.string(),
       name: z.string(),
+      bio: z.string().nullable(),
+      website: z.string().nullable(),
+      image: z.string().nullable(),
+      followersCount: z.number(),
+      followingCount: z.number(),
+      postCount: z.number(),
+      isFollowing: z.boolean(),
     }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     getSuggestedUsers: publicProcedure.output(z.array(z.object({
       id: z.string(),
       name: z.string(),
+      bio: z.string().nullable(),
+      website: z.string().nullable(),
+      image: z.string().nullable(),
+      followersCount: z.number(),
+      followingCount: z.number(),
+      postCount: z.number(),
+      isFollowing: z.boolean(),
     }))).query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     updateProfile: publicProcedure.input(z.object({
       name: z.string().optional(),

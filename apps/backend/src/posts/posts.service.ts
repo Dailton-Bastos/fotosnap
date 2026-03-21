@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreatePostInput } from '@repo/trpc/schemas';
+import { CreatePostInput, Post } from '@repo/trpc/schemas';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { schema } from '../database/database.module';
@@ -22,7 +22,7 @@ export class PostsService {
     });
   }
 
-  async findAll(userId: string, postUserId?: string) {
+  async findAll(userId: string, postUserId?: string): Promise<Post[]> {
     const posts = await this.database.query.post.findMany({
       where: postUserId ? eq(post.userId, postUserId) : undefined,
       orderBy: [desc(post.createdAt)],
@@ -38,6 +38,7 @@ export class PostsService {
       comments: post.comments.length,
       timestamp: post.createdAt.toISOString(),
       user: {
+        id: post.user.id,
         username: post.user.name,
         avatar: post.user.image ?? '',
       },

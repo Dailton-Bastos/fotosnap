@@ -4,7 +4,6 @@ import { and, eq, ne, notInArray, sql } from 'drizzle-orm';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import { schema } from '../../database/database.module';
 import { follow, user } from '../schema';
-import { post } from '../../posts/schemas/schema';
 import type { UpdateProfileInput, UserProfile } from '@repo/trpc/schemas';
 
 @Injectable()
@@ -69,22 +68,20 @@ export class UsersService {
       );
   }
 
-  async getFollowers(userId: string) {
-    return this.database.query.follow.findMany({
-      where: eq(follow?.followingId, userId),
-      with: {
-        follower: { columns: { id: true, name: true } },
-      },
-    });
+  async getFollowers(userId: string, currentUserId: string) {
+    return this.database
+      .select(this.profileSelect(currentUserId))
+      .from(follow)
+      .innerJoin(user, eq(follow.followerId, user.id))
+      .where(eq(follow.followingId, userId));
   }
 
-  async getFollowing(userId: string) {
-    return this.database.query.follow.findMany({
-      where: eq(follow?.followerId, userId),
-      with: {
-        following: { columns: { id: true, name: true } },
-      },
-    });
+  async getFollowing(userId: string, currentUserId: string) {
+    return this.database
+      .select(this.profileSelect(currentUserId))
+      .from(follow)
+      .innerJoin(user, eq(follow.followingId, user.id))
+      .where(eq(follow.followerId, userId));
   }
 
   async getSuggestedUsers(userId: string) {
@@ -93,19 +90,21 @@ export class UsersService {
       columns: { followingId: true },
     });
 
-    return this.database.query.user.findMany({
-      where: and(
-        ne(user?.id, userId),
-        followingIds.length > 0
-          ? notInArray(
-              user?.id,
-              followingIds.map((f) => f.followingId),
-            )
-          : undefined,
-      ),
-      columns: { id: true, name: true },
-      limit: 5,
-    });
+    return this.database
+      .select(this.profileSelect(userId))
+      .from(user)
+      .where(
+        and(
+          ne(user?.id, userId),
+          followingIds.length > 0
+            ? notInArray(
+                user?.id,
+                followingIds.map((f) => f.followingId),
+              )
+            : undefined,
+        ),
+      )
+      .limit(5);
   }
 
   async getUserProfile(
@@ -113,27 +112,7 @@ export class UsersService {
     currentUserId: string,
   ): Promise<UserProfile | null> {
     const result = await this.database
-      .select({
-        id: user.id,
-        name: user.name,
-        image: user.image,
-        bio: user.bio,
-        website: user.website,
-        followersCount: sql<number>`(
-        SELECT COUNT(*)::int FROM ${follow} f WHERE f.${follow.followingId} = ${user}.${user.id}
-      )`,
-        followingCount: sql<number>`(
-        SELECT COUNT(*)::int FROM ${follow} f WHERE f.${follow.followerId} = ${user}.${user.id}
-      )`,
-        postCount: sql<number>`(
-        SELECT COUNT(*)::int FROM ${post} p WHERE p.${post.userId} = ${user}.${user.id}
-      )`,
-        isFollowing: sql<boolean>`EXISTS (
-        SELECT 1 FROM ${follow} f
-        WHERE f.${follow.followerId} = ${currentUserId}
-          AND f.${follow.followingId} = ${user}.${user.id}
-      )`,
-      })
+      .select(this.profileSelect(currentUserId))
       .from(user)
       .where(eq(user.id, userId));
 
@@ -149,5 +128,36 @@ export class UsersService {
         website: profileData.website,
       })
       .where(eq(user.id, userId));
+  }
+
+  private profileSelect(currentUserId: string) {
+    return {
+      id: user.id,
+      name: user.name,
+      image: user.image,
+      bio: user.bio,
+      website: user.website,
+      followersCount: sql<number>`(
+        SELECT COUNT(*)::int
+        FROM "follow" f
+        WHERE f.following_id = "user"."id"
+      )`,
+      followingCount: sql<number>`(
+        SELECT COUNT(*)::int
+        FROM "follow" f
+        WHERE f.follower_id = "user"."id"
+      )`,
+      postCount: sql<number>`(
+        SELECT COUNT(*)::int
+        FROM "post" p
+        WHERE p.user_id = "user"."id"
+      )`,
+      isFollowing: sql<boolean>`EXISTS(
+        SELECT 1
+        FROM "follow" f
+        WHERE f.follower_id = ${currentUserId}
+          AND f.following_id = "user"."id"
+      )`,
+    };
   }
 }

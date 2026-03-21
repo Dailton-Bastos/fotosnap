@@ -1,11 +1,14 @@
 'use client';
 
+import { EditProfileModal } from '@/components/dashboard/edit-profile-modal';
+import { FollowersFollowingModal } from '@/components/users/followers-following-modal';
 import { PostModal } from '@/components/users/post-modal';
 import { ProfileHeader } from '@/components/users/profile-header';
 import { ProfileNavigation } from '@/components/users/profile-navigation';
 import { ProfileTabs } from '@/components/users/profile-tabs';
+import { authClient } from '@/lib/auth/client';
 import { trpc } from '@/lib/trpc/client';
-import type { Post } from '@repo/trpc/schemas';
+import type { Post, UpdateProfileInput } from '@repo/trpc/schemas';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -23,6 +26,8 @@ export default function ProfilePage() {
 
   const utils = trpc.useUtils();
 
+  const { data: session } = authClient.useSession();
+
   const { data: profile, isLoading } = trpc.usersRouter.getUserProfile.useQuery(
     {
       userId,
@@ -39,6 +44,10 @@ export default function ProfilePage() {
     onSuccess: () => utils.usersRouter.getUserProfile.invalidate({ userId }),
   });
 
+  const updateProfileMutation = trpc.usersRouter.updateProfile.useMutation({
+    onSuccess: () => utils.usersRouter.getUserProfile.invalidate({ userId }),
+  });
+
   const handleFollowToggle = () => {
     if (!profile) return;
 
@@ -52,6 +61,10 @@ export default function ProfilePage() {
   const handlePostClick = (post: Post) => {
     setSelectedPost(post);
     setIsPostModalOpen(true);
+  };
+
+  const handleSaveProfile = (data: UpdateProfileInput) => {
+    updateProfileMutation.mutate(data);
   };
 
   if (isLoading) {
@@ -80,6 +93,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <ProfileHeader
           profile={profile}
+          isOwnProfile={session?.user.id === profile.id}
           onFollowToggle={handleFollowToggle}
           onEditProfile={() => setIsEditProfileOpen(true)}
           onOpenFollowers={() =>
@@ -108,6 +122,22 @@ export default function ProfilePage() {
           onOpenChange={setIsPostModalOpen}
         />
       )}
+
+      <EditProfileModal
+        profile={profile}
+        open={isEditProfileOpen}
+        onOpenChange={setIsEditProfileOpen}
+        onSave={handleSaveProfile}
+      />
+
+      <FollowersFollowingModal
+        open={followersFollowingModal.isOpen}
+        onOpenChange={(open) =>
+          setFollowersFollowingModal((prev) => ({ ...prev, isOpen: open }))
+        }
+        type={followersFollowingModal.type}
+        userId={userId}
+      />
     </div>
   );
 }
